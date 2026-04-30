@@ -78,3 +78,48 @@ export const getbysingleproduct = async(req,res)=>{
     })
 }
 }
+
+
+
+export const bulkProduct = async (req, res) => {
+    try {
+        const products = req.body;
+
+        // check array
+        if (!Array.isArray(products) || products.length === 0) {
+            return res.status(400).json({
+                status: false,
+                message: "Payload must be an array of products"
+            });
+        }
+
+        // optional: validate each product
+        for (let i = 0; i < products.length; i++) {
+            const { name, price, description, image, categoryID } = products[i];
+
+            if (!name || !price || !description || !image || !categoryID) {
+                return res.status(400).json({
+                    status: false,
+                    message: `Missing fields in product at index ${i}`
+                });
+            }
+        }
+
+        // insert bulk
+        const productList = await Product.insertMany(products, {
+            ordered: false // ek fail ho to baaki insert ho jaye
+        });
+
+        return res.status(201).json({
+            status: true,
+            message: "Bulk Product Added Successfully",
+            data: productList
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            status: false,
+            message: `Error in bulkProduct ${error.message}`
+        });
+    }
+};
